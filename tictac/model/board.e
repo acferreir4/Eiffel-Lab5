@@ -20,26 +20,27 @@ feature {NONE} -- Initialization
 	make
 			-- Initialization for `Current'.
 		do
-			create player_one.make ("", "X")
-			create player_two.make ("", "O")
-			current_turn := player_one
-			create {ARRAYED_LIST[TUPLE]} move_list.make (0)
+			create player_one.make ("", "X", 1)
+			create player_two.make ("", "O", 2)
+			current_turn := 1
+			create {ARRAYED_LIST[TUPLE [player : PLAYER; move : INTEGER]]} move_list.make (0)
 			current_move := 1
-			i := 0
+
+			i := 0						-- bullshit, remove soon
 		end
 
 feature -- board attributes
 
 	i : INTEGER							-- bullshit, remove soon
 
-	move_list: LIST[TUPLE [player : PLAYER; move : INTEGER; ]				-- list of moves done
-	current_move: INTEGER				-- pointer for list of moves, show current moves
-	player_one, player_two: PLAYER		-- players
-	game_in_play: BOOLEAN				-- if false, undo and redo are not possible
+	move_list: LIST[TUPLE [player : PLAYER; move : INTEGER]]				-- history of moves done
+	current_move: INTEGER													-- pointer for list of moves, show current moves
+	player_one, player_two: PLAYER											-- players
+	game_in_play: BOOLEAN													-- if false, undo and redo are not possible
 
 feature {BOARD} -- hidden board attributes
 
-	current_turn: PLAYER				-- stores whose turn it is
+	current_turn: INTEGER													-- stores whose turn it is
 
 feature -- Commands
 
@@ -61,11 +62,20 @@ feature -- Commands
 			game_in_play := true
 		end
 
-	play(a_player_name: STRING; a_move: INTEGER)
---		Insert a new move into the move_list
-	do
-
-	end
+	play(a_player_name: STRING; a_move: INTEGER; )
+--		Insert a new move into the move_list, assume defensive checks
+		local
+			current_player: PLAYER
+			current_player_move: TUPLE[player : PLAYER; move : INTEGER]
+		do
+			if a_player_name ~ player_one.get_name then
+				current_player := player_one
+			else
+				current_player := player_two
+			end
+			current_player_move := [current_player, a_move]
+			move_list.force (current_player_move)
+		end
 
 feature -- Defensive Queries
 
@@ -73,7 +83,7 @@ feature -- Defensive Queries
 --		Checks if a_move is between 1-9, and if it is available
 		do
 			if a_move >= 1 and a_move <= 9 then
-				Result := true									-- ToDo: Scan across move_list
+				Result := true												-- ToDo: Scan across move_list
 			else
 				Result := false
 			end
