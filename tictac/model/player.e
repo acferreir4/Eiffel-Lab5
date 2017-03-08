@@ -56,4 +56,9 @@ feature -- Queries
 		do
 			Result := name
 		end
+
+	get_piece: STRING
+		do
+			Result := piece
+		end
 end

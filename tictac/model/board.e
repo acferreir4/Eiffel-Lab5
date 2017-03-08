@@ -23,7 +23,7 @@ feature {NONE} -- Initialization
 			create player_one.make ("", "X", 1)
 			create player_two.make ("", "O", 2)
 			current_turn := 1
-			create {ARRAYED_LIST[TUPLE [player : PLAYER; move : INTEGER]]} move_list.make (0)
+			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; piece: STRING]]} move_list.make (0)
 			current_move := 1
 
 			i := 0						-- bullshit, remove soon
@@ -33,14 +33,14 @@ feature -- board attributes
 
 	i : INTEGER							-- bullshit, remove soon
 
-	move_list: LIST[TUPLE [player : PLAYER; move : INTEGER]]				-- history of moves done
-	current_move: INTEGER													-- pointer for list of moves, show current moves
-	player_one, player_two: PLAYER											-- players
-	game_in_play: BOOLEAN													-- if false, undo and redo are not possible
+	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; piece: STRING]]	-- history of moves done
+	current_move: INTEGER														-- pointer for list of moves, show current moves
+	player_one, player_two: PLAYER												-- players
+	game_in_play: BOOLEAN														-- if false, undo and redo are not possible
 
 feature {BOARD} -- hidden board attributes
 
-	current_turn: INTEGER													-- stores whose turn it is
+	current_turn: INTEGER														-- stores whose turn it is
 
 feature -- Commands
 
@@ -62,19 +62,20 @@ feature -- Commands
 			game_in_play := true
 		end
 
-	play(a_player_name: STRING; a_move: INTEGER; )
+	play (a_player_name: STRING; a_move: INTEGER)
 --		Insert a new move into the move_list, assume defensive checks
 		local
 			current_player: PLAYER
-			current_player_move: TUPLE[player : PLAYER; move : INTEGER]
+			current_player_move: TUPLE[player: PLAYER; position: INTEGER; piece: STRING]
 		do
 			if a_player_name ~ player_one.get_name then
 				current_player := player_one
 			else
 				current_player := player_two
 			end
-			current_player_move := [current_player, a_move]
+			current_player_move := [current_player, a_move, current_player.get_piece]
 			move_list.force (current_player_move)
+			check_for_win
 		end
 
 feature -- Defensive Queries
@@ -89,9 +90,32 @@ feature -- Defensive Queries
 			end
 		end
 
-	is_their_turn (a_player_name: STRING)
+	is_their_turn (a_player_name: STRING): BOOLEAN
+--		Compare a_player_name's id with current_turn
+		local
+			argument_player: PLAYER
 		do
+			if a_player_name ~ player_one.get_name then
+				argument_player := player_one
+			else
+				argument_player := player_two
+			end
+			if argument_player.get_id = current_turn then
+				Result := true
+			else
+				Result := false
+			end
+		end
 
+	player_exists (a_player_name: STRING): BOOLEAN
+--		Check if a player with such a name exists
+		do
+			Result := a_player_name ~ player_one.get_name  or a_player_name ~ player_two.get_name
+		end
+
+	is_alpha_name (a_player_name: STRING): BOOLEAN
+		do
+			Result := a_player_name[1].is_alpha
 		end
 
 feature {BOARD} -- Hidden Commands
@@ -103,6 +127,12 @@ feature {BOARD} -- Hidden Commands
 --		asking if they want to play again or new game
 		do
 
+		end
+
+	win_condition
+--		Ask if they want to play again and reset the board
+		do
+			move_list.wipe_out
 		end
 
 feature -- model operations
