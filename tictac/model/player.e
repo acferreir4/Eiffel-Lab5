@@ -61,4 +61,9 @@ feature -- Queries
 		do
 			Result := piece
 		end
+
+	get_wins: INTEGER
+		do
+			Result := games_won
+		end
 end
