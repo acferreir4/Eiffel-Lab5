@@ -202,7 +202,12 @@ feature	-- status message queries
 
 	get_previous_status_message: STRING
 	do
-		Result := move_list[current_move - 1].status
+		if current_move > 1 then
+			Result := move_list[current_move - 1].status
+		else
+			Result := ""
+		end
+
 	end
 
 feature {BOARD} -- Hidden Commands
@@ -267,23 +272,23 @@ feature {BOARD} -- Hidden Queries
 				i = current_move
 			loop
 				if move_list[i].position >= 1 and move_list[i].position <= 3 then
-					top_row.remove (i)
+					top_row.remove (move_list[i].position)
 					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						top_row.insert_string (move_list[i].piece, i)
+						top_row.insert_string (move_list[i].piece, move_list[i].position)
 					else
 						top_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 4 and move_list[i].position <= 6 then
-					mid_row.remove (i)
+					mid_row.remove (move_list[i].position - 3)
 					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						mid_row.insert_string (move_list[i].piece, i)
+						mid_row.insert_string (move_list[i].piece, move_list[i].position - 3)
 					else
 						mid_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 7 and move_list[i].position <= 9 then
-					bot_row.remove (i)
+					bot_row.remove (move_list[i].position - 6)
 					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						bot_row.insert_string (move_list[i].piece, i)
+						bot_row.insert_string (move_list[i].piece, move_list[i].position - 6)
 					else
 						bot_row.insert_string ("_", i)
 					end
@@ -299,10 +304,6 @@ feature {BOARD} -- Hidden Queries
 		end
 
 feature -- model operations
-	default_update
-			-- Perform update to the model state.		bullshit delete once abstract ui connected
-		do
-		end
 
 	reset
 			-- Reset model state.
