@@ -38,7 +38,7 @@ feature {NONE} -- Initialization
 feature {BOARD} -- board attributes
 
 	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]	-- history of moves done
-	player_one, player_two, next_player: PLAYER									-- players, next_player used for printing
+	player_one, player_two, next_player: PLAYER									-- players, next_player used for printing and allowing next player, alternates between matches
 	game_in_play: BOOLEAN														-- if false, undo and redo are not possible
 	status_message: STRING														-- stores status message to output
 	redo_allowed: BOOLEAN														-- allows redo operations
@@ -48,10 +48,14 @@ feature -- User Commands
 
 	new_game (a_player_one_name: STRING; a_player_two_name: STRING)
 		do
+			if game_won then
+				reset
+			end
 			player_one.change_name (a_player_one_name)
 			player_one.reset_won
 			player_two.change_name (a_player_two_name)
 			player_two.reset_won
+			game_won := false
 			game_in_play := true
 			next_player := player_one
 			status_flag(0)
@@ -62,13 +66,15 @@ feature -- User Commands
 			dummy_player: PLAYER
 		do
 			create dummy_player.make ("", "", 0)
-			move_list.wipe_out
+			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]} move_list.make (0)
 			move_list.force (dummy_player, 0, "ok")
-			move_list.start
 			move_list.forth
 
 			redo_allowed := false
-			new_game (player_one.get_name, player_two.get_name)
+			game_in_play := true
+			game_won := false
+--			next_player := player_one
+			status_flag(0)
 		end
 
 	play (a_player_name: STRING; a_move: INTEGER)
@@ -96,7 +102,7 @@ feature -- User Commands
 
 			redo_allowed := false
 
---			check_for_win
+			check_for_win
 		end
 
 	undo
@@ -215,22 +221,85 @@ feature	-- status message queries
 
 feature {BOARD} -- Hidden Commands
 
-	check_for_win
 --		Check after every move, invisible to other classes
 --		Scan from 1..current_move in move_list
 --		If someone won, increment their wins, turn game_in_play to false, game_won to true, call other invisible function
 --		asking if they want to play again or new game
+
+	build_board: ARRAY[STRING]
+		-- Store each piece in an array, index in array matching index on board
 		local
---			i: INTEGER
-			tiles: ARRAY[INTEGER]				--stores index in move_list when a move has occurred
+			i: INTEGER
+			tiles: ARRAY[STRING]
 		do
-			create tiles.make_empty
+			create tiles.make_filled ("", 1, 9)
+
+			from
+				i := 1
+			until
+				i > move_list.index
+			loop
+				if move_list[i].position > 0 then
+					tiles.put (move_list[i].player.get_piece, move_list[i].position)
+				end
+				i := i + 1
+			end
+
+			Result := tiles
 		end
 
-	win_condition
---		Ask if they want to play again and reset the board
+	check_for_win
+		local
+			tiles: ARRAY[STRING]
+			winning_piece: STRING
 		do
-			move_list.wipe_out
+			tiles := build_board
+			winning_piece := compare_pieces (tiles)
+			if winning_piece /~ "" then
+				get_player_with_piece(winning_piece).win_game
+				status_flag(6)
+				game_won := true
+				game_in_play := false
+			elseif board_full (tiles) then
+				status_flag(9)
+				game_won := true
+				game_in_play := false
+			end
+		end
+
+	compare_pieces (tiles: ARRAY[STRING]): STRING
+--			Check the board, return the winning piece, return "" if no winning piece
+		do
+			Result := ""
+			if tiles[1] ~ tiles[2] and tiles[2] ~ tiles[3] and tiles[1] /~ "" or
+			   tiles[1] ~ tiles[5] and tiles[5] ~ tiles[9] and tiles[1] /~ "" or
+			   tiles[1] ~ tiles[4] and tiles[4] ~ tiles[7] and tiles[1] /~ "" then
+					Result := tiles[1]
+			elseif tiles[4] ~ tiles[5] and tiles[5] ~ tiles[6] and tiles[4] /~ "" or
+			       tiles[7] ~ tiles[5] and tiles[5] ~ tiles[3] and tiles[7] /~ "" or
+			       tiles[2] ~ tiles[5] and tiles[5] ~ tiles[8] and tiles[2] /~ "" then
+					Result := tiles[5]
+			elseif tiles[7] ~ tiles[8] and tiles[8] ~ tiles[9] and tiles[7] /~ "" or
+				   tiles[3] ~ tiles[6] and tiles[6] ~ tiles[9] and tiles[3] /~ "" then
+					Result := tiles[9]
+			end
+		end
+	board_full (board: ARRAY[STRING]): BOOLEAN
+		local
+			i: INTEGER
+			full: BOOLEAN
+		do
+			from
+				i := 1
+			until
+				i > board.capacity or not full
+			loop
+				if board[i] ~ "" then
+					full := false
+				end
+				i := i + 1
+			end
+			Result := full
 		end
 
 feature {BOARD} -- Hidden Queries
@@ -238,6 +307,15 @@ feature {BOARD} -- Hidden Queries
 	get_player_with_name (a_player_name: STRING): PLAYER
 		do
 			if player_one.get_name ~ a_player_name then
+				Result := player_one
+			else
+				Result := player_two
+			end
+		end
+
+	get_player_with_piece (a_piece: STRING): PLAYER
+		do
+			if a_piece ~ player_one.get_piece then
 				Result := player_one
 			else
 				Result := player_two
@@ -272,38 +350,8 @@ feature {BOARD} -- Hidden Queries
 			Result.append (": score for %"")
 			Result.append (player_two.get_name)
 			Result.append ("%" (as O)")
-
-			--DEBUG
---			Result.append ("%NCURRENT MOVE_LIST COUNT: ")
---			Result.append (move_list.count.out)
---			Result.append ("%NCURSOR INDEX: ")
---			Result.append (move_list.index.out)
---			Result.append (print_board_list)
 		end
 
-	print_board_list: STRING
-			-- For debugging, will be deleted before submission
-		local
-			i: INTEGER
-		do
-			create Result.make_empty
-			from
-				i := 1
-			until
-				i > move_list.count
-			loop
-				Result.append ("%N---------------%NINDEX")
-				Result.append (i.out)
-				Result.append ("%N---------------%NPLAYER: ")
-				Result.append (move_list.at (i).player.get_name)
-				Result.append ("%NPIECE: ")
-				Result.append (move_list.at (i).player.get_piece)
-				Result.append ("%NPOSITION: ")
-				Result.append (move_list.at (i).position.out)
-				Result.append ("%N---------------")
-				i := i + 1
-			end
-		end
 	print_opponent (a_player: PLAYER): STRING
 		do
 			if a_player ~ player_one then

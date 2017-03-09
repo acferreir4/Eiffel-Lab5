@@ -5,6 +5,6 @@ ToDo:
 	- Double check undo and redo
 		- Fix undo accidentally going past game condition
 	
-	- Create win conditions and their messages
+	- Change how "next_player" works, as it alternates between games
 
 	- Acceptance tests
