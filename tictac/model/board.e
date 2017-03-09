@@ -40,7 +40,7 @@ feature {BOARD} -- board attributes
 
 	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; piece: STRING; status: STRING]]	-- history of moves done
 	current_move: INTEGER														-- pointer for list of moves, show current moves
-	player_one, player_two, next_player: PLAYER									-- players
+	player_one, player_two, next_player: PLAYER									-- players, next_player used for printing
 	game_in_play: BOOLEAN														-- if false, undo and redo are not possible
 	status_message: STRING														-- stores status message to output
 	player_turn: INTEGER														-- stores whose turn it is
@@ -84,7 +84,12 @@ feature -- User Commands
 			end
 
 			current_player_move := [current_player, a_move, current_player.get_piece, "ok"]
-			move_list.force (current_player_move)
+--			move_list.force (current_player_move)
+			if move_list.count > current_move then
+				move_list[current_move] := current_player_move
+			else
+				move_list.force (current_player_move)
+			end
 			redo_allowed := false
 			if player_turn = 1 then
 				player_turn := 2
@@ -92,12 +97,12 @@ feature -- User Commands
 				player_turn := 1
 			end
 			current_move := current_move + 1
-			check_for_win
+--			check_for_win
 		end
 
 	undo
 		do
-			if current_move > 1 then
+			if current_move > 1 and game_in_play then
 				current_move := current_move - 1
 				redo_allowed := true
 			end
@@ -149,7 +154,7 @@ feature -- Defensive Queries
 
 	player_exists (a_player_name: STRING): BOOLEAN
 		do
-			Result := a_player_name ~ player_one.get_name  or a_player_name ~ player_two.get_name
+			Result := a_player_name ~ player_one.get_name or a_player_name ~ player_two.get_name
 		end
 
 	is_alpha_name (a_player_name: STRING): BOOLEAN
@@ -315,7 +320,9 @@ feature -- queries
 	out : STRING
 		do
 			create Result.make_from_string ("  ")
-			Result.append (move_list[current_move].status)
+
+			Result.append (move_list[current_move-1].status)			-- fix this shit, new_game("A", "A") gives ok if first command
+
 			Result.append (print_message)
 			status_message := ""
 		end
