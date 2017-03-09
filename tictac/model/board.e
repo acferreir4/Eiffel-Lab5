@@ -29,23 +29,20 @@ feature {NONE} -- Initialization
 			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]} move_list.make (0)
 
 			status_message := "ok"
-			player_turn := 1
-			current_move := 1
 			redo_allowed := false
 
 			move_list.force (dummy_player, 0, "ok")
+			move_list.forth
 		end
 
 feature {BOARD} -- board attributes
 
 	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]	-- history of moves done
-	current_move: INTEGER														-- pointer for list of moves, show current moves
 	player_one, player_two, next_player: PLAYER									-- players, next_player used for printing
 	game_in_play: BOOLEAN														-- if false, undo and redo are not possible
 	status_message: STRING														-- stores status message to output
-	player_turn: INTEGER														-- stores whose turn it is
 	redo_allowed: BOOLEAN														-- allows redo operations
-	game_won: BOOLEAN
+	game_won: BOOLEAN															-- checks if game won, used for undo and win condition/prompts
 
 feature -- User Commands
 
@@ -57,14 +54,14 @@ feature -- User Commands
 			player_one.reset_won
 			player_two.change_name (a_player_two_name)
 			player_two.reset_won
-			current_move := 1
 			game_in_play := true
 			next_player := player_one
+			status_flag(0)
 		end
 
 	play_again
 		do
-			current_move := 1
+			move_list.start
 			game_in_play := true
 			redo_allowed := false
 		end
@@ -75,43 +72,41 @@ feature -- User Commands
 			current_player: PLAYER
 			current_player_move: TUPLE[player: PLAYER; position: INTEGER; status: STRING]
 		do
-			if a_player_name ~ player_one.get_name then
-				current_player := player_one
+			current_player := get_player_with_name (a_player_name)
+
+			if current_player ~ player_one then
 				next_player := player_two
 			else
-				current_player := player_two
 				next_player := player_one
 			end
 
 			current_player_move := [current_player, a_move, "ok"]
---			move_list.force (current_player_move)
-			if move_list.count > current_move then
-				move_list[current_move] := current_player_move
+
+			if move_list.count > move_list.index then
+				move_list.forth
+				move_list.replace (current_player_move)
 			else
 				move_list.force (current_player_move)
+				move_list.forth
 			end
+
 			redo_allowed := false
-			if player_turn = 1 then
-				player_turn := 2
-			else
-				player_turn := 1
-			end
-			current_move := current_move + 1
+
 --			check_for_win
 		end
 
 	undo
 		do
-			if current_move > 1 and game_in_play then
-				current_move := current_move - 1
+			if move_list.index > 1 and game_in_play then
+				move_list.back
 				redo_allowed := true
 			end
 		end
 
 	redo
 		do
-			if redo_allowed and move_list.count >= current_move + 1 then
-				current_move := current_move + 1
+			if redo_allowed and move_list.count >= move_list.index + 1 then
+				move_list.forth
 			end
 		end
 
@@ -127,7 +122,7 @@ feature -- Defensive Queries
 				from
 					i := 1
 				until
-					i = current_move or stop
+					i = move_list.index or stop
 				loop
 					if move_list[i].position = a_move then
 						Result := false
@@ -142,14 +137,12 @@ feature -- Defensive Queries
 
 	is_their_turn (a_player_name: STRING): BOOLEAN
 		local
-			argument_player: PLAYER
 		do
-			if a_player_name ~ player_one.get_name then
-				argument_player := player_one
+			if move_list.count > move_list.index then
+				Result := a_player_name ~ print_opponent (move_list.item.player)
 			else
-				argument_player := player_two
+				Result := a_player_name ~ next_player.get_name
 			end
-			Result := argument_player.get_id = player_turn
 		end
 
 	player_exists (a_player_name: STRING): BOOLEAN
@@ -195,7 +188,7 @@ feature	-- status message commands
 		create dummy_player.make ("", "", 0)
 		status_move := [dummy_player, 0, a_status_message]
 		move_list.force (status_move)
-		current_move := current_move + 1
+		move_list.forth
 	end
 
 feature	-- status message queries
@@ -207,8 +200,8 @@ feature	-- status message queries
 
 	get_previous_status_message: STRING
 	do
-		if current_move > 1 then
-			Result := move_list[current_move - 1].status
+		if move_list.index > 1 then
+			Result := move_list[move_list.index - 1].status
 		else
 			Result := ""
 		end
@@ -234,6 +227,15 @@ feature {BOARD} -- Hidden Commands
 
 feature {BOARD} -- Hidden Queries
 
+	get_player_with_name (a_player_name: STRING): PLAYER
+		do
+			if player_one.get_name ~ a_player_name then
+				Result := player_one
+			else
+				Result := player_two
+			end
+		end
+
 	print_message: STRING
 		do
 			create Result.make_from_string ("")
@@ -243,7 +245,11 @@ feature {BOARD} -- Hidden Queries
 			elseif game_won = true then
 				Result.append ("play again or start new game%N  ")
 			else
-				Result.append (next_player.get_name)
+				if move_list.item.status ~ "ok" then
+					Result.append (print_opponent (move_list.item.player))
+				else
+					Result.append (next_player.get_name)
+				end
 				Result.append (" plays next%N  ")
 			end
 			Result.append (print_board)
@@ -258,11 +264,48 @@ feature {BOARD} -- Hidden Queries
 			Result.append (": score for %"")
 			Result.append (player_two.get_name)
 			Result.append ("%" (as O)")
+
+			--DEBUG
+--			Result.append ("%NCURRENT MOVE_LIST COUNT: ")
+--			Result.append (move_list.count.out)
+--			Result.append ("%NCURSOR INDEX: ")
+--			Result.append (move_list.index.out)
+--			Result.append (print_board_list)
+		end
+
+	print_board_list: STRING
+		local
+			i: INTEGER
+		do
+			create Result.make_empty
+			from
+				i := 1
+			until
+				i > move_list.count
+			loop
+				Result.append ("%N---------------%NINDEX")
+				Result.append (i.out)
+				Result.append ("%N---------------%NPLAYER: ")
+				Result.append (move_list.at (i).player.get_name)
+				Result.append ("%NPIECE: ")
+				Result.append (move_list.at (i).player.get_piece)
+				Result.append ("%NPOSITION: ")
+				Result.append (move_list.at (i).position.out)
+				Result.append ("%N---------------")
+				i := i + 1
+			end
+		end
+	print_opponent (a_player: PLAYER): STRING
+		do
+			if a_player ~ player_one then
+				Result := player_two.get_name
+			else
+				Result := player_one.get_name
+			end
 		end
 
 	print_board: STRING
 		local
-			output: STRING
 			top_row, mid_row, bot_row: STRING
 			i: INTEGER
 		do
@@ -274,7 +317,7 @@ feature {BOARD} -- Hidden Queries
 			from
 				i := 1
 			until
-				i = current_move
+				i > move_list.index
 			loop
 				if move_list[i].position >= 1 and move_list[i].position <= 3 then
 					top_row.remove (move_list[i].position)
@@ -321,7 +364,11 @@ feature -- queries
 		do
 			create Result.make_from_string ("  ")
 
-			Result.append (move_list[current_move-1].status)			-- fix this shit, new_game("A", "A") gives ok if first command
+			if status_message ~ "ok" then
+				Result.append (status_message)
+			else
+				Result.append (move_list.item.status)			-- fix this shit
+			end
 
 			Result.append (print_message)
 			status_message := ""
