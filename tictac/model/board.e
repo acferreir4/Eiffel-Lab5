@@ -100,6 +100,7 @@ feature -- User Commands
 			if move_list.index > 1 and game_in_play then
 				move_list.back
 				redo_allowed := true
+				status_flag(0)
 			end
 		end
 
@@ -157,7 +158,7 @@ feature -- Defensive Queries
 
 	play_again_allowed: BOOLEAN
 		do
-			Result := game_in_play = false and game_won = true
+			Result := not game_in_play and game_won = true
 		end
 
 feature	-- status message commands
@@ -364,7 +365,7 @@ feature -- queries
 		do
 			create Result.make_from_string ("  ")
 
-			if status_message ~ "ok" then
+			if status_message /~ "" then
 				Result.append (status_message)
 			else
 				Result.append (move_list.item.status)			-- fix this shit

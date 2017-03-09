@@ -19,7 +19,7 @@ feature -- command
 				model.play_again
 			else
 				model.status_flag (7)
-				model.invalid_command (model.get_status_message)
+				--model.invalid_command (model.get_status_message)
 			end
 			etf_cmd_container.on_change.notify ([Current])
     	end
