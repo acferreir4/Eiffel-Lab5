@@ -17,8 +17,8 @@ create {BOARD_ACCESS}
 	make
 
 feature {NONE} -- Initialization
+
 	make
-			-- Initialization for `Current'.
 		local
 			dummy_player: PLAYER
 		do
@@ -31,7 +31,7 @@ feature {NONE} -- Initialization
 			status_message := "ok"
 			redo_allowed := false
 
-			move_list.force (dummy_player, 0, "ok")
+			move_list.force (dummy_player, 0, "ok")								-- initializing move
 			move_list.forth
 		end
 
@@ -47,8 +47,6 @@ feature {BOARD} -- board attributes
 feature -- User Commands
 
 	new_game (a_player_one_name: STRING; a_player_two_name: STRING)
---		Change player one and player two to new names, reset their wins
---		Clear the board, reset the pointer
 		do
 			player_one.change_name (a_player_one_name)
 			player_one.reset_won
@@ -60,14 +58,20 @@ feature -- User Commands
 		end
 
 	play_again
+		local
+			dummy_player: PLAYER
 		do
+			create dummy_player.make ("", "", 0)
+			move_list.wipe_out
+			move_list.force (dummy_player, 0, "ok")
 			move_list.start
-			game_in_play := true
+			move_list.forth
+
 			redo_allowed := false
+			new_game (player_one.get_name, player_two.get_name)
 		end
 
 	play (a_player_name: STRING; a_move: INTEGER)
---		Insert a new move into the move_list, assume defensive checks
 		local
 			current_player: PLAYER
 			current_player_move: TUPLE[player: PLAYER; position: INTEGER; status: STRING]
@@ -118,7 +122,7 @@ feature -- Defensive Queries
 			i: INTEGER
 			stop: BOOLEAN
 		do
-			Result := true												-- true until contradition occurs
+			Result := true
 			if a_move >= 1 and a_move <= 9 then
 				from
 					i := 1
@@ -221,7 +225,6 @@ feature {BOARD} -- Hidden Commands
 			tiles: ARRAY[INTEGER]				--stores index in move_list when a move has occurred
 		do
 			create tiles.make_empty
-			tiles
 		end
 
 	win_condition
@@ -279,6 +282,7 @@ feature {BOARD} -- Hidden Queries
 		end
 
 	print_board_list: STRING
+			-- For debugging, will be deleted before submission
 		local
 			i: INTEGER
 		do
@@ -358,7 +362,8 @@ feature -- model operations
 			make
 		end
 
-feature -- queries
+feature -- output query
+
 	out : STRING
 		do
 			create Result.make_from_string ("  ")
@@ -366,7 +371,7 @@ feature -- queries
 			if status_message /~ "" then
 				Result.append (status_message)
 			else
-				Result.append (move_list.item.status)			-- fix this shit
+				Result.append (move_list.item.status)
 			end
 
 			Result.append (print_message)
