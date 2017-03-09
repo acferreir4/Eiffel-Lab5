@@ -26,19 +26,19 @@ feature {NONE} -- Initialization
 			create player_two.make ("", "O", 2)
 			create next_player.make ("", "", 0)
 			create dummy_player.make ("", "", 0)
-			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; piece: STRING; status: STRING]]} move_list.make (0)
+			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]} move_list.make (0)
 
 			status_message := "ok"
 			player_turn := 1
 			current_move := 1
 			redo_allowed := false
 
-			move_list.force (dummy_player, 0, "", "ok")
+			move_list.force (dummy_player, 0, "ok")
 		end
 
 feature {BOARD} -- board attributes
 
-	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; piece: STRING; status: STRING]]	-- history of moves done
+	move_list: LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]	-- history of moves done
 	current_move: INTEGER														-- pointer for list of moves, show current moves
 	player_one, player_two, next_player: PLAYER									-- players, next_player used for printing
 	game_in_play: BOOLEAN														-- if false, undo and redo are not possible
@@ -73,7 +73,7 @@ feature -- User Commands
 --		Insert a new move into the move_list, assume defensive checks
 		local
 			current_player: PLAYER
-			current_player_move: TUPLE[player: PLAYER; position: INTEGER; piece: STRING; status: STRING]
+			current_player_move: TUPLE[player: PLAYER; position: INTEGER; status: STRING]
 		do
 			if a_player_name ~ player_one.get_name then
 				current_player := player_one
@@ -83,7 +83,7 @@ feature -- User Commands
 				next_player := player_one
 			end
 
-			current_player_move := [current_player, a_move, current_player.get_piece, "ok"]
+			current_player_move := [current_player, a_move, "ok"]
 --			move_list.force (current_player_move)
 			if move_list.count > current_move then
 				move_list[current_move] := current_player_move
@@ -190,10 +190,10 @@ feature	-- status message commands
 	invalid_command (a_status_message: STRING)
 	local
 		dummy_player: PLAYER
-		status_move: TUPLE [player: PLAYER; position: INTEGER; piece: STRING; status: STRING]
+		status_move: TUPLE [player: PLAYER; position: INTEGER; status: STRING]
 	do
 		create dummy_player.make ("", "", 0)
-		status_move := [dummy_player, 0, "", a_status_message]
+		status_move := [dummy_player, 0, a_status_message]
 		move_list.force (status_move)
 		current_move := current_move + 1
 	end
@@ -278,22 +278,22 @@ feature {BOARD} -- Hidden Queries
 			loop
 				if move_list[i].position >= 1 and move_list[i].position <= 3 then
 					top_row.remove (move_list[i].position)
-					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						top_row.insert_string (move_list[i].piece, move_list[i].position)
+					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
+						top_row.insert_string (move_list[i].player.get_piece, move_list[i].position)
 					else
 						top_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 4 and move_list[i].position <= 6 then
 					mid_row.remove (move_list[i].position - 3)
-					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						mid_row.insert_string (move_list[i].piece, move_list[i].position - 3)
+					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
+						mid_row.insert_string (move_list[i].player.get_piece, move_list[i].position - 3)
 					else
 						mid_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 7 and move_list[i].position <= 9 then
 					bot_row.remove (move_list[i].position - 6)
-					if move_list[i].piece ~ "X" or move_list[i].piece ~ "O" then
-						bot_row.insert_string (move_list[i].piece, move_list[i].position - 6)
+					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
+						bot_row.insert_string (move_list[i].player.get_piece, move_list[i].position - 6)
 					else
 						bot_row.insert_string ("_", i)
 					end
