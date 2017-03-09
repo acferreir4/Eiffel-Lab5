@@ -17,7 +17,10 @@ feature -- command
 			play_precond(player, press)
     	do
 			-- perform some update on the model state
-			if not model.player_exists (player) then
+			if model.play_again_allowed then
+				model.status_flag (8)
+				model.invalid_command (model.get_status_message)
+			elseif not model.player_exists (player) then
 				model.status_flag (4)
 				model.invalid_command (model.get_status_message)
 			elseif not model.is_their_turn (player) then

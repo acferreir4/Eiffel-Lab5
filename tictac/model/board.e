@@ -216,8 +216,12 @@ feature {BOARD} -- Hidden Commands
 --		Scan from 1..current_move in move_list
 --		If someone won, increment their wins, turn game_in_play to false, game_won to true, call other invisible function
 --		asking if they want to play again or new game
+		local
+--			i: INTEGER
+			tiles: ARRAY[INTEGER]				--stores index in move_list when a move has occurred
 		do
-
+			create tiles.make_empty
+			tiles
 		end
 
 	win_condition
@@ -324,22 +328,16 @@ feature {BOARD} -- Hidden Queries
 					top_row.remove (move_list[i].position)
 					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
 						top_row.insert_string (move_list[i].player.get_piece, move_list[i].position)
-					else
-						top_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 4 and move_list[i].position <= 6 then
 					mid_row.remove (move_list[i].position - 3)
 					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
 						mid_row.insert_string (move_list[i].player.get_piece, move_list[i].position - 3)
-					else
-						mid_row.insert_string ("_", i)
 					end
 				elseif move_list[i].position >= 7 and move_list[i].position <= 9 then
 					bot_row.remove (move_list[i].position - 6)
 					if move_list[i].player.get_piece ~ "X" or move_list[i].player.get_piece ~ "O" then
 						bot_row.insert_string (move_list[i].player.get_piece, move_list[i].position - 6)
-					else
-						bot_row.insert_string ("_", i)
 					end
 				end
 				i := i + 1
