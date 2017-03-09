@@ -6,16 +6,21 @@ note
 
 class
 	ETF_PLAY_AGAIN
-inherit 
+inherit
 	ETF_PLAY_AGAIN_INTERFACE
 		redefine play_again end
 create
 	make
-feature -- command 
+feature -- command
 	play_again
     	do
 			-- perform some update on the model state
-			model.default_update
+			if model.play_again_allowed then
+				model.play_again
+			else
+				model.status_flag (7)
+				model.invalid_command (model.get_status_message)
+			end
 			etf_cmd_container.on_change.notify ([Current])
     	end
 

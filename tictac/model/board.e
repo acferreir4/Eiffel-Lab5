@@ -82,9 +82,16 @@ feature -- User Commands
 				current_player := player_two
 				next_player := player_one
 			end
+
 			current_player_move := [current_player, a_move, current_player.get_piece, "ok"]
 			move_list.force (current_player_move)
 			redo_allowed := false
+			if player_turn = 1 then
+				player_turn := 2
+			else
+				player_turn := 1
+			end
+			current_move := current_move + 1
 			check_for_win
 		end
 
@@ -106,7 +113,6 @@ feature -- User Commands
 feature -- Defensive Queries
 
 	is_valid_move (a_move: INTEGER): BOOLEAN
---		Checks if a_move is between 1-9, and if it is available
 		local
 			i: INTEGER
 			stop: BOOLEAN
@@ -130,7 +136,6 @@ feature -- Defensive Queries
 		end
 
 	is_their_turn (a_player_name: STRING): BOOLEAN
---		Compare a_player_name's id with current_turn
 		local
 			argument_player: PLAYER
 		do
@@ -143,7 +148,6 @@ feature -- Defensive Queries
 		end
 
 	player_exists (a_player_name: STRING): BOOLEAN
---		Check if a player with such a name exists
 		do
 			Result := a_player_name ~ player_one.get_name  or a_player_name ~ player_two.get_name
 		end
@@ -153,7 +157,12 @@ feature -- Defensive Queries
 			Result := a_player_name[1].is_alpha
 		end
 
-feature	-- status messages
+	play_again_allowed: BOOLEAN
+		do
+			Result := game_in_play = false and game_won = true
+		end
+
+feature	-- status message commands
 
 	status_flag (a_flag: INTEGER)
 	do
@@ -173,11 +182,6 @@ feature	-- status messages
 		end
 	end
 
-	get_status_message: STRING
-	do
-		Result := status_message
-	end
-
 	invalid_command (a_status_message: STRING)
 	local
 		dummy_player: PLAYER
@@ -187,6 +191,18 @@ feature	-- status messages
 		status_move := [dummy_player, 0, "", a_status_message]
 		move_list.force (status_move)
 		current_move := current_move + 1
+	end
+
+feature	-- status message queries
+
+	get_status_message: STRING
+	do
+		Result := status_message
+	end
+
+	get_previous_status_message: STRING
+	do
+		Result := move_list[current_move - 1].status
 	end
 
 feature {BOARD} -- Hidden Commands
@@ -280,11 +296,6 @@ feature {BOARD} -- Hidden Queries
 			Result.append (mid_row)
 			Result.append ("%N  ")
 			Result.append (bot_row)
-		end
-
-	print_tile_at (position: INTEGER): STRING
-		do
-			Result := ""
 		end
 
 feature -- model operations
