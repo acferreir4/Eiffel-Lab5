@@ -30,9 +30,11 @@ feature {NONE} -- Initialization
 
 			status_message := "ok"
 			redo_allowed := false
+			last_first_player := player_two.get_piece
 
 			move_list.force (dummy_player, 0, "ok")								-- initializing move
 			move_list.forth
+
 		end
 
 feature {BOARD} -- board attributes
@@ -43,6 +45,7 @@ feature {BOARD} -- board attributes
 	status_message: STRING														-- stores status message to output
 	redo_allowed: BOOLEAN														-- allows redo operations
 	game_won: BOOLEAN															-- checks if game won, used for undo and win condition/prompts
+	last_first_player: STRING
 
 feature -- User Commands
 
@@ -57,7 +60,14 @@ feature -- User Commands
 			player_two.reset_won
 			game_won := false
 			game_in_play := true
-			next_player := player_one
+
+			if last_first_player ~ player_two.get_piece then
+				next_player := player_one
+			else
+				next_player := player_two
+			end
+			last_first_player := next_player.get_piece
+
 			status_flag(0)
 		end
 
