@@ -28,9 +28,9 @@ feature {NONE} -- Initialization
 			create dummy_player.make ("", "", 0)
 			create {ARRAYED_LIST[TUPLE [player: PLAYER; position: INTEGER; status: STRING]]} move_list.make (0)
 
+			last_first_player := player_one.get_piece
 			status_message := "ok"
 			redo_allowed := false
-			last_first_player := player_two.get_piece
 
 			move_list.force (dummy_player, 0, "ok")								-- initializing move
 			move_list.forth
@@ -60,14 +60,7 @@ feature -- User Commands
 			player_two.reset_won
 			game_won := false
 			game_in_play := true
-
-			if last_first_player ~ player_two.get_piece then
-				next_player := player_one
-			else
-				next_player := player_two
-			end
-			last_first_player := next_player.get_piece
-
+			next_player := player_one
 			status_flag(0)
 		end
 
@@ -83,7 +76,11 @@ feature -- User Commands
 			redo_allowed := false
 			game_in_play := true
 			game_won := false
---			next_player := player_one
+			if last_first_player ~ player_one.get_piece then
+				next_player := player_two
+			else
+				next_player := player_one
+			end
 			status_flag(0)
 		end
 
@@ -341,7 +338,9 @@ feature {BOARD} -- Hidden Queries
 			elseif game_won = true then
 				Result.append ("play again or start new game%N  ")
 			else
-				if move_list.item.status ~ "ok" then
+				if player_one.get_wins = 0 and player_two.get_wins = 0 and move_list.count = 1 then
+					Result.append (player_one.get_name)
+				elseif move_list.item.status ~ "ok" then
 					Result.append (print_opponent (move_list.item.player))
 				else
 					Result.append (next_player.get_name)
@@ -360,11 +359,20 @@ feature {BOARD} -- Hidden Queries
 			Result.append (": score for %"")
 			Result.append (player_two.get_name)
 			Result.append ("%" (as O)")
+
+--			Result.append ("%NTotal size: ")
+--			Result.append (move_list.count.out)
+--			Result.append ("%NCurrent index: ")
+--			Result.append (move_list.index.out)
 		end
 
 	print_opponent (a_player: PLAYER): STRING
 		do
 			if a_player ~ player_one then
+				Result := player_two.get_name
+			elseif a_player ~ player_two then
+				Result := player_one.get_name
+			elseif last_first_player ~ player_one.get_piece then
 				Result := player_two.get_name
 			else
 				Result := player_one.get_name
@@ -412,10 +420,9 @@ feature {BOARD} -- Hidden Queries
 			Result.append (bot_row)
 		end
 
-feature -- model operations
+feature -- model reset operations
 
 	reset
-			-- Reset model state.
 		do
 			make
 		end
