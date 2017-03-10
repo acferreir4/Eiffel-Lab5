@@ -359,11 +359,6 @@ feature {BOARD} -- Hidden Queries
 			Result.append (": score for %"")
 			Result.append (player_two.get_name)
 			Result.append ("%" (as O)")
-
---			Result.append ("%NTotal size: ")
---			Result.append (move_list.count.out)
---			Result.append ("%NCurrent index: ")
---			Result.append (move_list.index.out)
 		end
 
 	print_opponent (a_player: PLAYER): STRING
