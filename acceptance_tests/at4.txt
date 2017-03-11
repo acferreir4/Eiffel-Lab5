@@ -1,0 +1,10 @@
+-- at4.txt: Test the undo and redo functions
+new_game("Andrew", "Dan")
+play("Andrew", 1)
+play("Dan", 3)
+undo
+undo
+play("Andrew", 2)
+redo
+redo
+

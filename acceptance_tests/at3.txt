@@ -1,0 +1,12 @@
+-- at3.txt: Simulate a tie game.
+new_game("Andrew", "Dan")
+play("Andrew", 1)
+play("Dan", 5)
+play("Andrew", 3)
+play("Dan", 2)
+play("Andrew", 8)
+play("Dan", 6)
+play("Andrew", 4)
+play("Dan", 7)
+play("Andrew", 9)
+play_again

@@ -1,0 +1,23 @@
+-- at2.txt: Simulate as many errors as possible
+-- so that we can verify the correct error message
+-- is shown to the user.
+-- Error: names of players must be different
+new_game("Simin", "Simin")
+-- Error: name must start with A-Z or a-z
+new_game("123", "456")
+new_game("Andrew", "Dan")
+-- Error: no such player
+play("Eric", 1)
+-- Error: not this player's turn
+play("Dan", 2)
+play("Andrew", 1)
+-- Error: button already taken
+play("Dan", 1)
+play("Dan", 2)
+play("Andrew", 4)
+-- Error: finish this game first
+play_again
+play("Dan", 3)
+play("Andrew", 7)
+-- Error: game is finished
+play("Dan", 9)

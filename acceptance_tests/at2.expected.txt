@@ -1,0 +1,97 @@
+  ok:  => start new game
+  ___
+  ___
+  ___
+  0: score for "" (as X)
+  0: score for "" (as O)
+->new_game("Simin","Simin")
+  names of players must be different:  => start new game
+  ___
+  ___
+  ___
+  0: score for "" (as X)
+  0: score for "" (as O)
+->new_game("123","456")
+  name must start with A-Z or a-z:  => start new game
+  ___
+  ___
+  ___
+  0: score for "" (as X)
+  0: score for "" (as O)
+->new_game("Andrew","Dan")
+  ok: => Andrew plays next
+  ___
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Eric",1)
+  no such player: => Andrew plays next
+  ___
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Dan",2)
+  not this player's turn: => Andrew plays next
+  ___
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Andrew",1)
+  ok: => Dan plays next
+  X__
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Dan",1)
+  button already taken: => Dan plays next
+  X__
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Dan",2)
+  ok: => Andrew plays next
+  XO_
+  ___
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Andrew",4)
+  ok: => Dan plays next
+  XO_
+  X__
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play_again
+  finish this game first: => Dan plays next
+  XO_
+  X__
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Dan",3)
+  ok: => Andrew plays next
+  XOO
+  X__
+  ___
+  0: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Andrew",7)
+  there is a winner: => play again or start new game
+  XOO
+  X__
+  X__
+  1: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
+->play("Dan",9)
+  game is finished: => play again or start new game
+  XOO
+  X__
+  X__
+  1: score for "Andrew" (as X)
+  0: score for "Dan" (as O)
